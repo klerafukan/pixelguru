@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <title>PixelGuru</title>
+  <link rel="stylesheet" href="src/styles/main.css" />
+</head>
+<body>
+
+  <!-- Hauptnavigation -->
+  <nav id="main-nav">
+    <button class="nav-btn active" data-view="gallery">🖼 Galerie</button>
+    <button class="nav-btn" data-view="puzzle">🎨 Malen</button>
+  </nav>
+
+  <!-- Galerie-Ansicht -->
+  <section id="view-gallery" class="view active">
+    <h2>Meine Galerie</h2>
+    <div id="gallery-grid"></div>
+    <div id="gallery-empty" class="empty-hint">
+      Noch keine fertigen Bilder. Fang an zu malen!
+    </div>
+  </section>
+
+  <!-- Puzzle-Auswahl -->
+  <section id="view-puzzle" class="view">
+    <div id="puzzle-select">
+      <h2>Bild wählen</h2>
+      <button id="btn-import" class="btn-import">＋ Eigenes Bild importieren</button>
+      <div id="puzzle-list"></div>
+    </div>
+
+    <!-- Spiel-Ansicht -->
+    <div id="puzzle-game" class="hidden">
+      <div id="game-header">
+        <button id="btn-back">← Zurück</button>
+        <span id="game-title"></span>
+        <span id="game-progress">0%</span>
+      </div>
+
+      <div id="canvas-wrapper">
+        <canvas id="pixel-canvas"></canvas>
+      </div>
+
+      <div id="color-bar">
+        <!-- Farbfelder werden dynamisch erzeugt -->
+      </div>
+    </div>
+  </section>
+
+  <script src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
+  <script type="module" src="src/app.js?v=5"></script>
+
+  <!-- Import-Dialog (bottom sheet) -->
+  <div id="import-overlay" class="overlay hidden">
+    <div class="dialog">
+      <div class="dialog-header">
+        <h3>Bild importieren</h3>
+        <button id="import-close" class="btn-icon">✕</button>
+      </div>
+
+      <div class="dialog-body">
+        <!-- Datei-Dropzone -->
+        <div id="import-dropzone">
+          <input type="file" id="import-file" accept="image/*" />
+          <label for="import-file">
+            <span class="drop-icon">🖼</span>
+            <span>Bild auswählen oder hier ablegen</span>
+          </label>
+        </div>
+
+        <!-- Vorschau-Bereich (nach Auswahl sichtbar) -->
+        <div id="import-previews" class="hidden">
+          <div class="preview-row">
+            <div>
+              <div class="preview-label">Original</div>
+              <canvas id="import-original"></canvas>
+            </div>
+            <div class="preview-arrow">→</div>
+            <div>
+              <div class="preview-label">Pixel-Vorschau</div>
+              <canvas id="import-result"></canvas>
+            </div>
+          </div>
+
+          <div class="option-group">
+            <div class="option-label">Rastergröße</div>
+            <div class="option-row">
+              <button class="opt-btn" data-grid="12">Winzig<br><small>12px</small></button>
+              <button class="opt-btn active" data-grid="20">Klein<br><small>20px</small></button>
+              <button class="opt-btn" data-grid="32">Mittel<br><small>32px</small></button>
+              <button class="opt-btn" data-grid="48">Groß<br><small>48px</small></button>
+              <button class="opt-btn" data-grid="64">Riesig<br><small>64px</small></button>
+            </div>
+          </div>
+
+          <div class="option-group">
+            <div class="option-label">Farbanzahl</div>
+            <div class="option-row">
+              <button class="opt-btn active" data-colors="5">5<br><small>Farben</small></button>
+              <button class="opt-btn" data-colors="8">8<br><small>Farben</small></button>
+              <button class="opt-btn" data-colors="12">12<br><small>Farben</small></button>
+              <button class="opt-btn" data-colors="16">16<br><small>Farben</small></button>
+              <button class="opt-btn" data-colors="24">24<br><small>Farben</small></button>
+            </div>
+          </div>
+
+          <div class="option-group">
+            <div class="option-label">Titel</div>
+            <input id="import-title" type="text" placeholder="Name des Puzzles" class="title-input" />
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <button id="import-confirm" class="btn-primary" disabled>Puzzle erstellen</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

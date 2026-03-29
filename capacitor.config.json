@@ -1,0 +1,12 @@
+{
+  "appId": "com.pixelguru.app",
+  "appName": "PixelGuru",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#1a1a2e"
+    }
+  }
+}

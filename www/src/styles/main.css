@@ -1,0 +1,542 @@
+/* ============================================================
+   Reset & Basis
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --bg:        #1a1a2e;
+  --surface:   #16213e;
+  --accent:    #e94560;
+  --text:      #eaeaea;
+  --text-dim:  #888;
+  --bar-h:     88px;
+  --nav-h:     56px;
+  --radius:    10px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* ============================================================
+   Navigation
+   ============================================================ */
+#main-nav {
+  display: flex;
+  height: var(--nav-h);
+  background: var(--surface);
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.nav-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s, border-bottom 0.2s;
+  border-bottom: 3px solid transparent;
+}
+
+.nav-btn.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+/* ============================================================
+   Views
+   ============================================================ */
+.view {
+  display: none;
+  height: calc(100vh - var(--nav-h));
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.view.active {
+  display: block;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ============================================================
+   Galerie
+   ============================================================ */
+#gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.gallery-thumb {
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+  position: relative;
+}
+
+.gallery-thumb:hover,
+.gallery-thumb:focus {
+  border-color: var(--accent);
+}
+
+.gallery-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-delete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.gallery-thumb:hover .gallery-delete,
+.gallery-thumb:focus-within .gallery-delete {
+  display: flex;
+}
+
+.gallery-delete:hover {
+  background: var(--accent);
+}
+
+.empty-hint {
+  text-align: center;
+  color: var(--text-dim);
+  margin-top: 48px;
+  font-size: 0.9rem;
+}
+
+/* ============================================================
+   Puzzle-Liste
+   ============================================================ */
+#puzzle-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.puzzle-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 12px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+  text-align: center;
+  position: relative;
+}
+
+.puzzle-card:hover,
+.puzzle-card:focus {
+  border-color: var(--accent);
+}
+
+.puzzle-card .card-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background: #2a2a4a;
+  object-fit: cover;
+}
+
+.puzzle-card .card-title {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.puzzle-card .card-progress {
+  font-size: 0.75rem;
+  color: var(--accent);
+  margin-top: 4px;
+}
+
+.card-delete {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  border: none;
+  color: #fff;
+  font-size: 0.65rem;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.puzzle-card:hover .card-delete,
+.puzzle-card:focus-within .card-delete {
+  display: flex;
+}
+
+.card-delete:hover {
+  background: var(--accent);
+}
+
+/* ============================================================
+   Spiel-Header
+   ============================================================ */
+#puzzle-game {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--nav-h));
+}
+
+#game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+#btn-back {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+#game-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+#game-progress {
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+/* ============================================================
+   Canvas-Bereich
+   ============================================================ */
+#canvas-wrapper {
+  flex: 1;
+  overflow: hidden;
+  background: #999999;
+  position: relative;
+}
+
+#pixel-canvas {
+  image-rendering: pixelated;
+  cursor: crosshair;
+  touch-action: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
+
+/* ============================================================
+   Farbleiste
+   ============================================================ */
+#color-bar {
+  height: var(--bar-h);
+  background: var(--surface);
+  border-top: 1px solid #2a2a4a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.color-swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.color-swatch.active {
+  border-color: #fff;
+  transform: scale(1.2);
+}
+
+.color-swatch.completed {
+  opacity: 0.35;
+}
+
+/* ============================================================
+   Import-Button
+   ============================================================ */
+.btn-import {
+  display: block;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 13px;
+  background: transparent;
+  border: 2px dashed #3a3a5a;
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-import:hover,
+.btn-import:focus {
+  background: rgba(233, 69, 96, 0.07);
+  border-color: var(--accent);
+}
+
+/* ============================================================
+   Import-Dialog (bottom sheet)
+   ============================================================ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.dialog {
+  background: var(--surface);
+  border-radius: var(--radius) var(--radius) 0 0;
+  width: 100%;
+  max-width: 540px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid #2a2a4a;
+  flex-shrink: 0;
+}
+
+.dialog-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+.dialog-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.dialog-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #2a2a4a;
+  flex-shrink: 0;
+}
+
+/* Dropzone */
+#import-dropzone {
+  border: 2px dashed #3a3a5a;
+  border-radius: var(--radius);
+  padding: 36px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+#import-dropzone.drag-over {
+  border-color: var(--accent);
+  background: rgba(233, 69, 96, 0.08);
+}
+
+#import-dropzone input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#import-dropzone label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.drop-icon {
+  font-size: 2.8rem;
+  line-height: 1;
+}
+
+/* Vorschau-Bereich */
+.preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.preview-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.preview-arrow {
+  color: var(--text-dim);
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+#import-original,
+#import-result {
+  border-radius: 6px;
+  display: block;
+  image-rendering: pixelated;
+  max-width: 130px;
+  background: #111122;
+}
+
+/* Option-Gruppen */
+.option-group {
+  margin-bottom: 18px;
+}
+
+.option-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.option-row {
+  display: flex;
+  gap: 8px;
+}
+
+.opt-btn {
+  flex: 1;
+  background: #22223e;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 7px 2px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  text-align: center;
+  line-height: 1.3;
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 0;
+}
+
+.opt-btn small {
+  color: var(--text-dim);
+  display: block;
+  font-size: 0.72rem;
+}
+
+.opt-btn.active {
+  border-color: var(--accent);
+  background: rgba(233, 69, 96, 0.1);
+}
+
+/* Titel-Eingabe */
+.title-input {
+  width: 100%;
+  background: #22223e;
+  border: 1px solid #3a3a5a;
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.title-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Primär-Button */
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
