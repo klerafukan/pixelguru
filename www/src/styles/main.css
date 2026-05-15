@@ -9,14 +9,14 @@
 }
 
 :root {
-  --bg:        #1a1a2e;
-  --surface:   #16213e;
+  --bg:        #f4f4f8;
+  --surface:   #ffffff;
   --accent:    #e94560;
-  --text:      #eaeaea;
-  --text-dim:  #888;
-  --bar-h:     88px;
-  --nav-h:     56px;
-  --radius:    10px;
+  --text:      #1a1a2e;
+  --text-dim:  #8a8a9e;
+  --bar-h:     120px;
+  --nav-h:     64px;
+  --radius:    12px;
 }
 
 html, body {
@@ -29,13 +29,81 @@ html, body {
 }
 
 /* ============================================================
+   Update-Banner
+   ============================================================ */
+#update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  padding-top: calc(10px + env(safe-area-inset-top, 0px));
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: bannerSlideIn 0.3s ease;
+}
+
+#update-banner.update-banner--hiding {
+  animation: bannerSlideOut 0.25s ease forwards;
+}
+
+.update-banner-msg {
+  flex: 1;
+}
+
+.update-banner-btn {
+  background: rgba(255,255,255,0.25);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.update-banner-close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.8);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+@keyframes bannerSlideIn {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+@keyframes bannerSlideOut {
+  from { transform: translateY(0);     opacity: 1; }
+  to   { transform: translateY(-100%); opacity: 0; }
+}
+
+/* ============================================================
    Navigation
    ============================================================ */
-#main-nav {
+#bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   height: var(--nav-h);
   background: var(--surface);
-  border-bottom: 1px solid #2a2a4a;
+  border-top: 1px solid #e0e0ea;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+  z-index: 50;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .nav-btn {
@@ -43,15 +111,26 @@ html, body {
   background: none;
   border: none;
   color: var(--text-dim);
-  font-size: 0.9rem;
+  font-size: 0.7rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s, border-bottom 0.2s;
-  border-bottom: 3px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: color 0.2s;
+}
+
+.nav-btn svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  fill: none;
 }
 
 .nav-btn.active {
-  color: var(--text);
-  border-bottom-color: var(--accent);
+  color: var(--accent);
 }
 
 /* ============================================================
@@ -59,13 +138,29 @@ html, body {
    ============================================================ */
 .view {
   display: none;
-  height: calc(100vh - var(--nav-h));
+  height: 100vh;
   overflow-y: auto;
-  padding: 16px;
+  padding: 16px 16px calc(var(--nav-h) + 24px);
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .view.active {
   display: block;
+}
+
+/* Puzzle-View: kein eigenes Scrolling – #puzzle-select übernimmt */
+#view-puzzle {
+  padding: 0;
+  overflow: hidden;
+}
+
+#puzzle-select {
+  height: 100vh;
+  overflow-y: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 16px calc(var(--nav-h) + 24px);
 }
 
 .hidden {
@@ -88,8 +183,9 @@ html, body {
   overflow: hidden;
   background: var(--surface);
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: border-color 0.2s;
+  border: 1.5px solid #e8e8f0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: border-color 0.2s, box-shadow 0.2s;
   position: relative;
 }
 
@@ -140,13 +236,49 @@ html, body {
 }
 
 /* ============================================================
+   Bild-Tabs (Mitgeliefert / Eigene)
+   ============================================================ */
+.image-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 12px 0 0;
+  background: #ebebf2;
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.image-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.image-tab.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.tab-panel {
+  margin-top: 12px;
+}
+
+/* ============================================================
    Puzzle-Liste
    ============================================================ */
-#puzzle-list {
+#puzzle-list-builtin,
+#puzzle-list-imported {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 4px;
 }
 
 .puzzle-card {
@@ -154,8 +286,9 @@ html, body {
   border-radius: var(--radius);
   padding: 12px;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: border-color 0.2s;
+  border: 1.5px solid #e8e8f0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: border-color 0.2s, box-shadow 0.2s;
   text-align: center;
   position: relative;
 }
@@ -163,15 +296,24 @@ html, body {
 .puzzle-card:hover,
 .puzzle-card:focus {
   border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(233,69,96,0.12);
 }
 
 .puzzle-card .card-thumb {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-bottom: 8px;
-  background: #2a2a4a;
-  object-fit: cover;
+  background: #f0f0f5;
+  overflow: hidden;
+  position: relative;
+}
+
+.puzzle-card .card-thumb canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
 }
 
 .puzzle-card .card-title {
@@ -185,32 +327,113 @@ html, body {
   margin-top: 4px;
 }
 
+.card-reset {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.82);
+  border: none;
+  color: #888;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.card-reset:hover,
+.card-reset:active {
+  background: #fff;
+  color: var(--accent);
+}
+
 .card-delete {
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.45);
   border: none;
   color: #fff;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   line-height: 1;
   cursor: pointer;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
 
-.puzzle-card:hover .card-delete,
-.puzzle-card:focus-within .card-delete {
-  display: flex;
-}
-
-.card-delete:hover {
+.card-delete:hover,
+.card-delete:active {
   background: var(--accent);
+}
+
+/* Glitzer-Toggle auf Puzzle-Karte */
+.card-glitter {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.75);
+  border: none;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.35;
+  transition: opacity 0.15s, transform 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+.card-glitter.active {
+  opacity: 1;
+}
+
+.card-glitter:hover,
+.card-glitter:active {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+/* Glitzer-Toggle im Import-Dialog */
+.glitter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 6px 0;
+  user-select: none;
+}
+
+.glitter-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.glitter-toggle-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.glitter-toggle-hint {
+  font-size: 0.75rem;
+  color: var(--text-dim);
 }
 
 /* ============================================================
@@ -219,34 +442,77 @@ html, body {
 #puzzle-game {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var(--nav-h));
+  height: 100vh;
 }
 
 #game-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 10px 12px;
   background: var(--surface);
+  border-bottom: 1px solid #e0e0ea;
   flex-shrink: 0;
+  gap: 8px;
 }
 
 #btn-back {
-  background: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0f0f8;
   border: none;
-  color: var(--accent);
-  font-size: 0.9rem;
+  border-radius: 20px;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 6px 12px 6px 8px;
   cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+#btn-back:hover,
+#btn-back:active {
+  background: #e4e4f0;
 }
 
 #game-title {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  text-align: center;
 }
 
 #game-progress {
-  font-size: 0.85rem;
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+  background: #fff0f3;
+  border: 1.5px solid #ffd0da;
+  border-radius: 20px;
+  padding: 5px 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+#game-progress-num {
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--accent);
+  min-width: 1.6ch;
+  text-align: right;
+}
+
+.progress-pct {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  opacity: 0.8;
 }
 
 /* ============================================================
@@ -275,33 +541,79 @@ html, body {
 #color-bar {
   height: var(--bar-h);
   background: var(--surface);
-  border-top: 1px solid #2a2a4a;
+  border-top: 1px solid #e0e0ea;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 0 12px;
+  gap: 5px;
+  padding: 6px 12px 4px;
   flex-shrink: 0;
-  overflow-x: auto;
+  overflow: hidden;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 46px));
+  grid-template-rows: repeat(2, minmax(0, 46px));
+  gap: 4px;
+  justify-content: center;
+  width: 100%;
 }
 
 .color-swatch {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 3px solid transparent;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 2.5px solid transparent;
   cursor: pointer;
   transition: transform 0.15s, border-color 0.15s;
-  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .color-swatch.active {
-  border-color: #fff;
-  transform: scale(1.2);
+  border-color: #1a1a2e;
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
 
 .color-swatch.completed {
-  opacity: 0.35;
+  opacity: 0.2;
+  pointer-events: none;
+  cursor: default;
+}
+
+.swatch-num {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.color-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+}
+
+.color-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c0c0d0;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.color-dot.active {
+  background: var(--accent);
+  transform: scale(1.3);
 }
 
 /* ============================================================
@@ -313,7 +625,7 @@ html, body {
   margin-bottom: 16px;
   padding: 13px;
   background: transparent;
-  border: 2px dashed #3a3a5a;
+  border: 2px dashed #c0c0d0;
   border-radius: var(--radius);
   color: var(--accent);
   font-size: 0.95rem;
@@ -360,7 +672,7 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 16px 16px 12px;
-  border-bottom: 1px solid #2a2a4a;
+  border-bottom: 1px solid #e0e0ea;
   flex-shrink: 0;
 }
 
@@ -387,13 +699,13 @@ html, body {
 
 .dialog-footer {
   padding: 12px 16px;
-  border-top: 1px solid #2a2a4a;
+  border-top: 1px solid #e0e0ea;
   flex-shrink: 0;
 }
 
 /* Dropzone */
 #import-dropzone {
-  border: 2px dashed #3a3a5a;
+  border: 2px dashed #c0c0d0;
   border-radius: var(--radius);
   padding: 36px 16px;
   text-align: center;
@@ -459,7 +771,8 @@ html, body {
   display: block;
   image-rendering: pixelated;
   max-width: 130px;
-  background: #111122;
+  max-height: 130px;
+  background: #f0f0f5;
 }
 
 /* Option-Gruppen */
@@ -477,12 +790,13 @@ html, body {
 
 .option-row {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .opt-btn {
-  flex: 1;
-  background: #22223e;
+  flex: 1 1 28%;
+  background: #f0f0f8;
   border: 2px solid transparent;
   border-radius: var(--radius);
   color: var(--text);
@@ -509,8 +823,8 @@ html, body {
 /* Titel-Eingabe */
 .title-input {
   width: 100%;
-  background: #22223e;
-  border: 1px solid #3a3a5a;
+  background: #f0f0f8;
+  border: 1px solid #e0e0ea;
   border-radius: var(--radius);
   padding: 10px 12px;
   color: var(--text);
@@ -540,3 +854,142 @@ html, body {
   opacity: 0.38;
   cursor: not-allowed;
 }
+
+/* ============================================================
+   Import-Dialog: Mehrstufiger Flow
+   ============================================================ */
+
+/* Kamera-Button */
+.btn-camera {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px;
+  background: #f0f0f8;
+  border: 2px dashed #c0c0d0;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.btn-camera:hover,
+.btn-camera:focus {
+  background: #e8e8f5;
+  border-color: var(--accent);
+}
+.btn-camera svg { flex-shrink: 0; stroke: currentColor; fill: none; }
+
+/* "oder"-Trennlinie */
+.import-or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+.import-or::before,
+.import-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e0e0ea;
+}
+
+/* Schritt 2: Bild prüfen */
+.step-canvas-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f0f0f5;
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-height: 80px;
+  margin-bottom: 16px;
+}
+.step-canvas-center canvas { display: block; }
+
+.keep-discard-row {
+  display: flex;
+  gap: 10px;
+}
+.btn-discard {
+  flex: 1;
+  padding: 12px;
+  background: #f0f0f8;
+  border: 1.5px solid #e0e0ea;
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-discard:hover { background: #e8e8f5; }
+.btn-keep {
+  flex: 2;
+  padding: 12px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-keep:hover { opacity: 0.88; }
+
+/* Schritt 3: Crop-Tool */
+#crop-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #1a1a2e;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+#crop-canvas {
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+  max-width: 100%;
+}
+.crop-hint {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  margin: 8px 0 4px;
+}
+.crop-actions-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.btn-step-sec {
+  flex: 1;
+  padding: 11px;
+  background: #f0f0f8;
+  border: 1.5px solid #e0e0ea;
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-step-sec:hover { background: #e8e8f5; }
+.btn-step-pri {
+  flex: 2;
+  padding: 11px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-step-pri:hover { opacity: 0.88; }
