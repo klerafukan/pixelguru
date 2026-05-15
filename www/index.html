@@ -3,20 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="theme-color" content="#f4f4f8" />
   <title>PixelGuru</title>
   <link rel="stylesheet" href="src/styles/main.css" />
 </head>
 <body>
 
-  <!-- Hauptnavigation -->
-  <nav id="main-nav">
-    <button class="nav-btn active" data-view="gallery">🖼 Galerie</button>
-    <button class="nav-btn" data-view="puzzle">🎨 Malen</button>
-  </nav>
-
   <!-- Galerie-Ansicht -->
-  <section id="view-gallery" class="view active">
+  <section id="view-gallery" class="view">
     <h2>Meine Galerie</h2>
     <div id="gallery-grid"></div>
     <div id="gallery-empty" class="empty-hint">
@@ -24,20 +18,37 @@
     </div>
   </section>
 
-  <!-- Puzzle-Auswahl -->
-  <section id="view-puzzle" class="view">
+  <!-- Puzzle-Auswahl (Standardansicht) -->
+  <section id="view-puzzle" class="view active">
     <div id="puzzle-select">
       <h2>Bild wählen</h2>
-      <button id="btn-import" class="btn-import">＋ Eigenes Bild importieren</button>
-      <div id="puzzle-list"></div>
+      <div class="image-tabs">
+        <button class="image-tab active" data-tab="builtin">Mitgeliefert</button>
+        <button class="image-tab" data-tab="imported">Eigene</button>
+      </div>
+
+      <!-- Mitgelieferte Bilder -->
+      <div id="tab-panel-builtin" class="tab-panel">
+        <div id="puzzle-list-builtin"></div>
+      </div>
+
+      <!-- Eigene Bilder -->
+      <div id="tab-panel-imported" class="tab-panel hidden">
+        <button id="btn-import" class="btn-import">＋ Eigenes Bild importieren</button>
+        <div id="puzzle-list-imported"></div>
+        <div id="imported-empty" class="empty-hint">Noch keine eigenen Bilder importiert.</div>
+      </div>
     </div>
 
     <!-- Spiel-Ansicht -->
     <div id="puzzle-game" class="hidden">
       <div id="game-header">
-        <button id="btn-back">← Zurück</button>
+        <button id="btn-back">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Zurück
+        </button>
         <span id="game-title"></span>
-        <span id="game-progress">0%</span>
+        <div id="game-progress"><span id="game-progress-num">0</span><span class="progress-pct">%</span></div>
       </div>
 
       <div id="canvas-wrapper">
@@ -50,29 +61,73 @@
     </div>
   </section>
 
+  <!-- Untere Navigation -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-view="puzzle">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Bilder</span>
+    </button>
+    <button class="nav-btn" data-view="gallery">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>Galerie</span>
+    </button>
+  </nav>
+
   <script src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
-  <script type="module" src="src/app.js?v=5"></script>
+  <script type="module" src="src/app.js?v=9"></script>
 
   <!-- Import-Dialog (bottom sheet) -->
   <div id="import-overlay" class="overlay hidden">
     <div class="dialog">
       <div class="dialog-header">
-        <h3>Bild importieren</h3>
+        <h3 id="import-dialog-title">Bild importieren</h3>
         <button id="import-close" class="btn-icon">✕</button>
       </div>
 
       <div class="dialog-body">
-        <!-- Datei-Dropzone -->
-        <div id="import-dropzone">
-          <input type="file" id="import-file" accept="image/*" />
-          <label for="import-file">
-            <span class="drop-icon">🖼</span>
-            <span>Bild auswählen oder hier ablegen</span>
-          </label>
+
+        <!-- Schritt 1: Quelle wählen -->
+        <div data-step="source">
+          <div id="import-dropzone">
+            <input type="file" id="import-file" accept="image/*" />
+            <label for="import-file">
+              <span class="drop-icon">🖼</span>
+              <span>Bild auswählen oder hier ablegen</span>
+            </label>
+          </div>
+          <div class="import-or"><span>oder</span></div>
+          <button id="import-camera-btn" class="btn-camera">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Foto mit Kamera aufnehmen
+          </button>
+          <input type="file" id="import-camera" accept="image/*" capture="environment" style="display:none" />
         </div>
 
-        <!-- Vorschau-Bereich (nach Auswahl sichtbar) -->
-        <div id="import-previews" class="hidden">
+        <!-- Schritt 2: Behalten / Verwerfen -->
+        <div data-step="preview" class="hidden">
+          <div class="step-canvas-center">
+            <canvas id="import-preview-canvas"></canvas>
+          </div>
+          <div class="keep-discard-row">
+            <button id="import-discard" class="btn-discard">✕ Verwerfen</button>
+            <button id="import-keep" class="btn-keep">Behalten &amp; zuschneiden →</button>
+          </div>
+        </div>
+
+        <!-- Schritt 3: Zuschneiden -->
+        <div data-step="crop" class="hidden">
+          <div id="crop-container">
+            <canvas id="crop-canvas"></canvas>
+          </div>
+          <p class="crop-hint">Ecken und Kanten ziehen zum Anpassen des Ausschnitts</p>
+          <div class="crop-actions-row">
+            <button id="crop-skip" class="btn-step-sec">Überspringen</button>
+            <button id="crop-apply" class="btn-step-pri">Zuschneiden ✓</button>
+          </div>
+        </div>
+
+        <!-- Schritt 4: Einstellungen & Vorschau -->
+        <div data-step="settings" class="hidden">
           <div class="preview-row">
             <div>
               <div class="preview-label">Original</div>
@@ -88,11 +143,12 @@
           <div class="option-group">
             <div class="option-label">Rastergröße</div>
             <div class="option-row">
-              <button class="opt-btn" data-grid="12">Winzig<br><small>12px</small></button>
-              <button class="opt-btn active" data-grid="20">Klein<br><small>20px</small></button>
-              <button class="opt-btn" data-grid="32">Mittel<br><small>32px</small></button>
-              <button class="opt-btn" data-grid="48">Groß<br><small>48px</small></button>
-              <button class="opt-btn" data-grid="64">Riesig<br><small>64px</small></button>
+              <button class="opt-btn" data-grid="12">Winzig<br><small>…</small></button>
+              <button class="opt-btn active" data-grid="20">Klein<br><small>…</small></button>
+              <button class="opt-btn" data-grid="32">Mittel<br><small>…</small></button>
+              <button class="opt-btn" data-grid="48">Groß<br><small>…</small></button>
+              <button class="opt-btn" data-grid="64">Riesig<br><small>…</small></button>
+              <button class="opt-btn" data-grid="80">XL<br><small>…</small></button>
             </div>
           </div>
 
@@ -104,6 +160,7 @@
               <button class="opt-btn" data-colors="12">12<br><small>Farben</small></button>
               <button class="opt-btn" data-colors="16">16<br><small>Farben</small></button>
               <button class="opt-btn" data-colors="24">24<br><small>Farben</small></button>
+              <button class="opt-btn" data-colors="32">32<br><small>Farben</small></button>
             </div>
           </div>
 
@@ -111,11 +168,20 @@
             <div class="option-label">Titel</div>
             <input id="import-title" type="text" placeholder="Name des Puzzles" class="title-input" />
           </div>
+
+          <div class="option-group">
+            <label class="glitter-toggle">
+              <input type="checkbox" id="import-glitter" />
+              <span class="glitter-toggle-label">✨ Dauerglitzer</span>
+              <span class="glitter-toggle-hint">Gewählte Farbe glitzert dauerhaft</span>
+            </label>
+          </div>
         </div>
+
       </div>
 
       <div class="dialog-footer">
-        <button id="import-confirm" class="btn-primary" disabled>Puzzle erstellen</button>
+        <button id="import-confirm" class="btn-primary hidden" disabled>Puzzle erstellen</button>
       </div>
     </div>
   </div>

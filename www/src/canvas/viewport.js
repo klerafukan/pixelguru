@@ -8,7 +8,6 @@
  *   screen = panX + logical * scale
  */
 
-const MIN_SCALE = 0.25;
 const MAX_SCALE = 10;
 
 export class Viewport {
@@ -22,6 +21,7 @@ export class Viewport {
     this.scale = 1;
     this.panX  = 0;
     this.panY  = 0;
+    this._minScale = 0.01; // wird in _fitToWrapper gesetzt
 
     canvas.style.transformOrigin = '0 0';
     canvas.style.position        = 'absolute';
@@ -40,8 +40,9 @@ export class Viewport {
 
     if (!wW || !cW) return;
 
-    // Maximal scale 1 beim Start (nicht upscalen), aber immer reinpassen
-    this.scale = Math.min(1, wW / cW, wH / cH);
+    // Fit-Scale = Minimum (kann nicht weiter rauszoomen als Anfangsansicht)
+    this.scale     = Math.min(1, wW / cW, wH / cH);
+    this._minScale = this.scale;
     this.panX  = (wW - cW * this.scale) / 2;
     this.panY  = (wH - cH * this.scale) / 2;
     this._apply();
@@ -54,7 +55,7 @@ export class Viewport {
    * @param {number} factor  – z.B. 1.1 = 10% rein
    */
   zoomAt(wrapX, wrapY, factor) {
-    const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, this.scale * factor));
+    const newScale = Math.min(MAX_SCALE, Math.max(this._minScale, this.scale * factor));
     const f = newScale / this.scale;
     this.panX  = wrapX - (wrapX - this.panX) * f;
     this.panY  = wrapY - (wrapY - this.panY) * f;

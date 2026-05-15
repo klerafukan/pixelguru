@@ -23,11 +23,11 @@ export async function saveCanvasAsImage(canvas, puzzleId) {
   const base64   = dataUrl.split(',')[1];
 
   if (isNative()) {
-    const { Filesystem, Directory } = await import('@capacitor/filesystem');
+    const Filesystem = window.Capacitor.Plugins.Filesystem;
     await Filesystem.writeFile({
       path:      `${DIR}/${filename}`,
       data:      base64,
-      directory: Directory.Data,
+      directory: 'DATA',
       recursive: true,
     });
   } else {
@@ -46,10 +46,10 @@ export async function saveCanvasAsImage(canvas, puzzleId) {
  */
 export async function deleteImage(filename) {
   if (isNative()) {
-    const { Filesystem, Directory } = await import('@capacitor/filesystem');
+    const Filesystem = window.Capacitor.Plugins.Filesystem;
     await Filesystem.deleteFile({
       path:      `${DIR}/${filename}`,
-      directory: Directory.Data,
+      directory: 'DATA',
     });
   } else {
     const saved = await loadSavedImages();
@@ -64,11 +64,11 @@ export async function deleteImage(filename) {
  */
 export async function loadSavedImages() {
   if (isNative()) {
-    const { Filesystem, Directory } = await import('@capacitor/filesystem');
+    const Filesystem = window.Capacitor.Plugins.Filesystem;
     try {
       const result = await Filesystem.readdir({
         path:      DIR,
-        directory: Directory.Data,
+        directory: 'DATA',
       });
       const images = await Promise.all(
         result.files
@@ -76,7 +76,7 @@ export async function loadSavedImages() {
           .map(async f => {
             const file = await Filesystem.readFile({
               path:      `${DIR}/${f.name}`,
-              directory: Directory.Data,
+              directory: 'DATA',
             });
             return { filename: f.name, dataUrl: `data:image/png;base64,${file.data}` };
           })

@@ -14,6 +14,7 @@ export const GRID_SIZES = [
   { id: 'medium', label: 'Mittel', maxDim: 32 },
   { id: 'large',  label: 'Groß',   maxDim: 48 },
   { id: 'xlarge', label: 'Riesig', maxDim: 64 },
+  { id: 'xxl',    label: 'XL',     maxDim: 80 },
 ];
 
 export const COLOR_COUNTS = [
@@ -21,7 +22,8 @@ export const COLOR_COUNTS = [
   { id: 'some',   label: 'Einige',  count: 8  },
   { id: 'medium', label: 'Mittel',  count: 12 },
   { id: 'many',   label: 'Viele',   count: 16 },
-  { id: 'lots',   label: 'Maximum', count: 24 },
+  { id: 'lots',   label: 'Mehr',    count: 24 },
+  { id: 'max',    label: 'Maximum', count: 32 },
 ];
 
 // ------------------------------------------------------------------
@@ -36,15 +38,17 @@ export const COLOR_COUNTS = [
  * @param {string} title
  * @returns {object}  Puzzle-Objekt (kompatibel mit puzzleStore)
  */
-export function convertImage(img, maxDim, colorCount, title) {
-  const { cols, rows } = calcGridSize(img.naturalWidth, img.naturalHeight, maxDim);
+export function convertImage(src, maxDim, colorCount, title) {
+  const srcW = src.naturalWidth  ?? src.width;
+  const srcH = src.naturalHeight ?? src.height;
+  const { cols, rows } = calcGridSize(srcW, srcH, maxDim);
 
   // Auf Rastergröße herunterskalieren
   const offscreen = document.createElement('canvas');
   offscreen.width  = cols;
   offscreen.height = rows;
   const ctx = offscreen.getContext('2d', { willReadFrequently: true });
-  ctx.drawImage(img, 0, 0, cols, rows);
+  ctx.drawImage(src, 0, 0, cols, rows);
   const imageData = ctx.getImageData(0, 0, cols, rows);
 
   // Opake Pixel für Quantisierung sammeln
@@ -76,11 +80,29 @@ export function convertImage(img, maxDim, colorCount, title) {
     pixels.push(rowArr);
   }
 
+  // Leere Cluster aus k-means entfernen (ghost colors in Farbpalette)
+  const usedIds = new Set();
+  for (const row of pixels) for (const id of row) if (id > 0) usedIds.add(id);
+  const remap = new Map();
+  let nextId  = 1;
+  const paletteCompact = [];
+  for (let i = 0; i < palette.length; i++) {
+    if (usedIds.has(i + 1)) {
+      remap.set(i + 1, nextId++);
+      paletteCompact.push(palette[i]);
+    }
+  }
+  for (const row of pixels) {
+    for (let c = 0; c < row.length; c++) {
+      if (row[c] > 0) row[c] = remap.get(row[c]);
+    }
+  }
+
   return {
     id:        `imported_${Date.now()}`,
     title:     title || 'Mein Bild',
     gridSize:  [cols, rows],
-    palette:   palette.map((hex, i) => ({ id: i + 1, hex, label: String(i + 1) })),
+    palette:   paletteCompact.map((hex, i) => ({ id: i + 1, hex, label: String(i + 1) })),
     pixels,
     previewUrl: null,
   };
@@ -90,15 +112,24 @@ export function convertImage(img, maxDim, colorCount, title) {
  * Zeichnet eine skalierte Puzzle-Vorschau auf ein Canvas.
  * @param {HTMLCanvasElement} canvas
  * @param {object} puzzle
- * @param {number} [cellSize=6]
+ * @param {number} [cellSize=6]   – gewünschte Zellgröße in CSS-px
+ * @param {number} [maxW=130]     – max. Breite des Canvas in CSS-px
+ * @param {number} [maxH=130]     – max. Höhe des Canvas in CSS-px
  */
-export function renderPreview(canvas, puzzle, cellSize = 6) {
+export function renderPreview(canvas, puzzle, cellSize = 6, maxW = 130, maxH = 130) {
   const [cols, rows] = puzzle.gridSize;
   const dpr = window.devicePixelRatio || 1;
-  canvas.width        = cols * cellSize * dpr;
-  canvas.height       = rows * cellSize * dpr;
-  canvas.style.width  = `${cols * cellSize}px`;
-  canvas.style.height = `${rows * cellSize}px`;
+
+  // Effektive Zellgröße so wählen, dass das Bild in maxW × maxH passt
+  const fitCell = Math.max(1, Math.floor(Math.min(maxW / cols, maxH / rows)));
+  const cs = Math.min(cellSize, fitCell);
+
+  const cssW = cols * cs;
+  const cssH = rows * cs;
+  canvas.width        = cssW * dpr;
+  canvas.height       = cssH * dpr;
+  canvas.style.width  = `${cssW}px`;
+  canvas.style.height = `${cssH}px`;
 
   const ctx = canvas.getContext('2d');
   ctx.save();
@@ -113,7 +144,7 @@ export function renderPreview(canvas, puzzle, cellSize = 6) {
         const color = puzzle.palette.find(p => p.id === colorId);
         ctx.fillStyle = color ? color.hex : '#333';
       }
-      ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+      ctx.fillRect(col * cs, row * cs, cs, cs);
     }
   }
   ctx.restore();
@@ -123,7 +154,7 @@ export function renderPreview(canvas, puzzle, cellSize = 6) {
 // Interne Hilfsfunktionen
 // ------------------------------------------------------------------
 
-function calcGridSize(imgW, imgH, maxDim) {
+export function calcGridSize(imgW, imgH, maxDim) {
   if (imgW >= imgH) {
     return { cols: maxDim, rows: Math.max(1, Math.round(maxDim * imgH / imgW)) };
   }

@@ -28,6 +28,10 @@ export class Interaction {
     this._lastPainted = null;
     this._lastPanPos  = null;
     this._lastPinch   = null;
+    // RAF-Buffer: neueste Position pro Frame, verhindert Arbeit über 60 fps
+    this._pendingPaint = null;
+    this._pendingPinch = null;
+    this._rafId        = null;
 
     this._onTouchStart = this._onTouchStart.bind(this);
     this._onTouchMove  = this._onTouchMove.bind(this);
@@ -37,9 +41,11 @@ export class Interaction {
     this._onMouseUp    = this._onMouseUp.bind(this);
     this._onWheel      = this._onWheel.bind(this);
 
-    canvas.addEventListener('touchstart', this._onTouchStart, { passive: false });
-    canvas.addEventListener('touchmove',  this._onTouchMove,  { passive: false });
-    canvas.addEventListener('touchend',   this._onTouchEnd,   { passive: false });
+    // passive:true ist sicher, weil #pixel-canvas touch-action:none hat—
+    // der Browser scrollt den Canvas-Bereich nie selbst
+    canvas.addEventListener('touchstart', this._onTouchStart, { passive: true });
+    canvas.addEventListener('touchmove',  this._onTouchMove,  { passive: true });
+    canvas.addEventListener('touchend',   this._onTouchEnd,   { passive: true });
     canvas.addEventListener('mousedown',  this._onMouseDown);
     window.addEventListener('mousemove',  this._onMouseMove);
     window.addEventListener('mouseup',    this._onMouseUp);
@@ -49,58 +55,92 @@ export class Interaction {
   // ── Touch ─────────────────────────────────────────────────────
 
   _onTouchStart(e) {
-    e.preventDefault();
+    // Kein e.preventDefault() nötig – Canvas hat touch-action:none
     if (e.touches.length >= 2) {
       this._state      = 'pinching';
       this._lastPinch  = this._pinchInfo(e.touches);
+      this._pendingPaint = null;
       return;
     }
     const t = e.touches[0];
-    if (this.renderer.selectedColorId !== null) {
+    this._lastPanPos = { x: t.clientX, y: t.clientY };
+
+    if (this.renderer.selectedColorId !== null && this._cellMatchesAtPoint(t.clientX, t.clientY)) {
+      // Ersttap trifft eine passende, noch unbemalte Zelle → Mal-Modus
       this._state       = 'painting';
       this._lastPainted = null;
       this._paintAt(t.clientX, t.clientY);
     } else {
-      this._state      = 'panning';
-      this._lastPanPos = { x: t.clientX, y: t.clientY };
+      // Kein Treffer (falsche Farbe, leer, bereits gemalt) → Pan-Modus
+      this._state = 'panning';
     }
   }
 
   _onTouchMove(e) {
-    e.preventDefault();
     if (e.touches.length >= 2) {
       if (this._state !== 'pinching') {
         this._state     = 'pinching';
         this._lastPinch = this._pinchInfo(e.touches);
-        return;
       }
-      const cur  = this._pinchInfo(e.touches);
-      const rect = this.wrapper.getBoundingClientRect();
-      const zoom = cur.dist / (this._lastPinch.dist || cur.dist);
-      this.viewport.zoomAt(cur.midX - rect.left, cur.midY - rect.top, zoom);
-      this.viewport.pan(cur.midX - this._lastPinch.midX, cur.midY - this._lastPinch.midY);
-      this._lastPinch = cur;
+      // Koordinaten kopieren (Touch-Objekte werden vom Browser wiederverwendet)
+      this._pendingPinch = {
+        t0: { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY },
+        t1: { clientX: e.touches[1].clientX, clientY: e.touches[1].clientY },
+      };
+      this._scheduleRaf();
       return;
     }
     const t = e.touches[0];
     if (this._state === 'painting') {
-      this._paintAt(t.clientX, t.clientY);
+      // RAF-throttled: nur die letzte Position pro Frame verarbeiten
+      this._pendingPaint = { x: t.clientX, y: t.clientY };
+      this._scheduleRaf();
     } else if (this._state === 'panning') {
+      // Pan = CSS-Transform, sofort anwenden (0 Latenz, läuft im Compositor)
       this.viewport.pan(t.clientX - this._lastPanPos.x, t.clientY - this._lastPanPos.y);
       this._lastPanPos = { x: t.clientX, y: t.clientY };
     }
   }
 
   _onTouchEnd(e) {
-    e.preventDefault();
+    this._pendingPaint = null;
+    this._pendingPinch = null;
     if (e.touches.length === 0) {
       this._state       = 'idle';
       this._lastPainted = null;
     } else if (e.touches.length === 1) {
-      // Von Pinch auf 1 Finger → pan
       this._state      = 'panning';
       this._lastPanPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }
+  }
+
+  // ── RAF-Scheduler ─────────────────────────────────────────────
+
+  _scheduleRaf() {
+    if (this._rafId !== null) return; // bereits angemeldet
+    this._rafId = requestAnimationFrame(() => {
+      this._rafId = null;
+      // Pinch zuerst (bestimmt neuen Scale)
+      if (this._pendingPinch) {
+        const { t0, t1 } = this._pendingPinch;
+        this._pendingPinch = null;
+        const cur  = { dist: Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY),
+                       midX: (t0.clientX + t1.clientX) / 2,
+                       midY: (t0.clientY + t1.clientY) / 2 };
+        const rect = this.wrapper.getBoundingClientRect();
+        const zoom = cur.dist / (this._lastPinch.dist || cur.dist);
+        this.viewport.zoomAt(cur.midX - rect.left, cur.midY - rect.top, zoom);
+        this.viewport.pan(cur.midX - this._lastPinch.midX, cur.midY - this._lastPinch.midY);
+        this._lastPinch = cur;
+        this.renderer.setViewScale(this.viewport.scale);
+      }
+      // Dann Paint
+      if (this._pendingPaint) {
+        const { x, y } = this._pendingPaint;
+        this._pendingPaint = null;
+        this._paintAt(x, y);
+      }
+    });
   }
 
   // ── Maus ──────────────────────────────────────────────────────
@@ -135,6 +175,19 @@ export class Interaction {
     const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
     const rect   = this.wrapper.getBoundingClientRect();
     this.viewport.zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor);
+    this.renderer.setViewScale(this.viewport.scale);
+  }
+
+  // ── Hilfsfunktion: trifft der Punkt eine passende, unbemalte Zelle? ──
+
+  _cellMatchesAtPoint(clientX, clientY) {
+    const logical = this.viewport.screenToCanvas(clientX, clientY);
+    const cell    = this.renderer.getCellAtLogical(logical.x, logical.y);
+    if (!cell) return false;
+    const selColor = this.renderer.selectedColorId;
+    return selColor !== null
+      && this.renderer.puzzle.pixels[cell.row][cell.col] === selColor
+      && !this.renderer.progress[cell.row][cell.col];
   }
 
   // ── Malen ─────────────────────────────────────────────────────
@@ -169,6 +222,7 @@ export class Interaction {
   }
 
   destroy() {
+    if (this._rafId !== null) { cancelAnimationFrame(this._rafId); this._rafId = null; }
     this.canvas.removeEventListener('touchstart', this._onTouchStart);
     this.canvas.removeEventListener('touchmove',  this._onTouchMove);
     this.canvas.removeEventListener('touchend',   this._onTouchEnd);
